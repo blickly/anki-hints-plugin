@@ -21,7 +21,7 @@ from ankiqt import mw
 HIDDEN_FIELD_INDEX=1
 SHOW_FIELD_KEY=Qt.Key_R
 CARD_TEMPLATE="Recognition"
-
+DEBUG=True
 
 def newKeyPressEvent(evt):
     """Show answer on RET or register answer."""
@@ -34,6 +34,11 @@ def newKeyPressEvent(evt):
 def newOnLoadFinished(self):
     self.onLoadFinished()
     if self.state == "showHint":
+        if DEBUG:
+            q = self.main.currentCard.htmlQuestion()
+            a = self.main.currentCard.htmlAnswer()
+            print "Card question HTML:", q
+            print "Card answer HTML:", a
         mf = self.body.page().mainFrame()
         modelID = "cma" + hexifyID(self.main.currentCard.cardModel.id)
         # FIXME: Using a fixed field index is not a general solution.
