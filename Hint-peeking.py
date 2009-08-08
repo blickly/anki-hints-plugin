@@ -12,41 +12,42 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from anki.hooks import wrap
+from anki.hooks import addHook, wrap
 from ankiqt.ui import view
 from anki.utils import hexifyID
 from ankiqt import mw
+import re
 
 # Settings
-HIDDEN_FIELD_INDEX=1
-SHOW_FIELD_KEY=Qt.Key_R
+ANSWER_FIELD="Meaning"
 CARD_TEMPLATE="Recognition"
+HIDDEN_TEXT="??"
+SHOW_HINT_KEY=Qt.Key_R
 DEBUG=True
 
 def newKeyPressEvent(evt):
-    """Show answer on RET or register answer."""
-    if mw.state == "showQuestion" and evt.key() == SHOW_FIELD_KEY:
+    """Show hint when the SHOW_HINT_KEY is pressed."""
+    if mw.state == "showQuestion" and evt.key() == SHOW_HINT_KEY:
         if mw.currentCard.cardModel.name == CARD_TEMPLATE:
             evt.accept()
             return mw.moveToState("showHint")
     return oldEventHandler(evt)
 
-def newOnLoadFinished(self):
-    self.onLoadFinished()
-    if self.state == "showHint":
-        if DEBUG:
-            q = self.main.currentCard.htmlQuestion()
-            a = self.main.currentCard.htmlAnswer()
-            print "Card question HTML:", q
-            print "Card answer HTML:", a
-        mf = self.body.page().mainFrame()
-        modelID = "cma" + hexifyID(self.main.currentCard.cardModel.id)
-        # FIXME: Using a fixed field index is not a general solution.
-        mf.evaluateJavaScript("document.getElementById('" + modelID + "')"
-                + ".childNodes["+str(HIDDEN_FIELD_INDEX*2)+"]"
-                + ".style.visibility='hidden'")
+def filterHint(a, currentCard):
+    """If we are showing the hint, filter out the ANSWER_FIELD"""
+    if mw.state == "showHint":
+        fieldIDs = ["fm" + hexifyID(field.id)
+                    for field in currentCard.fact.model.fieldModels
+                    if field.name == ANSWER_FIELD]
+        for fid in fieldIDs:
+            p = re.compile( '<span class="%s">.*?</span>' % fid)
+            #a = p.sub( '<span>%s</span>' % HIDDEN_TEXT, a, re.DOTALL)
+            a = p.sub( '', a, re.DOTALL)
+        return a
 
 def newRedisplay(self):
+    """If we are showing the hint, display the answer.
+    We will filter away the ANSWER_FIELD with a hook."""
     if self.state == "showHint":
         self.setBackground()
         if not self.main.currentCard.cardModel.questionInAnswer:
@@ -56,14 +57,10 @@ def newRedisplay(self):
         self.drawAnswer()
         self.flush()
 
+addHook("drawAnswer", filterHint)
+
 oldEventHandler = mw.keyPressEvent
 mw.keyPressEvent = newKeyPressEvent
 view.View.redisplay = wrap(view.View.redisplay, newRedisplay, "after")
-# We actually would like to use wrap method with pos="after",
-# but wrap seems not to work with a method connected to a signal.
-# Hence the following hack, with new method calling old one.
-view.View.newOnLoadFinished = newOnLoadFinished
-mw.connect(mw.mainWin.mainText,
-           SIGNAL("loadFinished(bool)"), mw.bodyView.newOnLoadFinished)
 
-mw.registerPlugin("Hint-peeking", 1)
+mw.registerPlugin("Hint-peeking", 3)
