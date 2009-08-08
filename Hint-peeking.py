@@ -21,29 +21,17 @@ import re
 # Settings
 ANSWER_FIELD="Meaning"
 CARD_TEMPLATE="Recognition"
-HIDDEN_TEXT="??"
 SHOW_HINT_KEY=Qt.Key_R
 DEBUG=True
 
 def newKeyPressEvent(evt):
     """Show hint when the SHOW_HINT_KEY is pressed."""
-    if mw.state == "showQuestion" and evt.key() == SHOW_HINT_KEY:
-        if mw.currentCard.cardModel.name == CARD_TEMPLATE:
+    if mw.state == "showQuestion":
+        if (mw.currentCard.cardModel.name == CARD_TEMPLATE
+                and evt.key() == SHOW_HINT_KEY):
             evt.accept()
             return mw.moveToState("showHint")
     return oldEventHandler(evt)
-
-def filterHint(a, currentCard):
-    """If we are showing the hint, filter out the ANSWER_FIELD"""
-    if mw.state == "showHint":
-        fieldIDs = ["fm" + hexifyID(field.id)
-                    for field in currentCard.fact.model.fieldModels
-                    if field.name == ANSWER_FIELD]
-        for fid in fieldIDs:
-            p = re.compile( '<span class="%s">.*?</span>' % fid)
-            #a = p.sub( '<span>%s</span>' % HIDDEN_TEXT, a, re.DOTALL)
-            a = p.sub( '', a, re.DOTALL)
-        return a
 
 def newRedisplay(self):
     """If we are showing the hint, display the answer.
@@ -55,7 +43,18 @@ def newRedisplay(self):
         if self.drawRule:
             self.write("<hr>")
         self.drawAnswer()
-        self.flush()
+    self.flush()
+
+def filterHint(a, currentCard):
+    """If we are showing the hint, filter out the ANSWER_FIELD"""
+    if mw.state == "showHint":
+        fieldIDs = ["fm" + hexifyID(field.id)
+                    for field in currentCard.fact.model.fieldModels
+                    if field.name == ANSWER_FIELD]
+        for fid in fieldIDs:
+            p = re.compile('<span class="%s">.*?</span>' % fid)
+            a = p.sub('<span> </span>', a, re.DOTALL)
+    return a
 
 addHook("drawAnswer", filterHint)
 
@@ -63,4 +62,4 @@ oldEventHandler = mw.keyPressEvent
 mw.keyPressEvent = newKeyPressEvent
 view.View.redisplay = wrap(view.View.redisplay, newRedisplay, "after")
 
-mw.registerPlugin("Hint-peeking", 3)
+mw.registerPlugin("Hint-peeking", 4)
