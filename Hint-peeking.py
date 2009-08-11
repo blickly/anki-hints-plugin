@@ -10,25 +10,22 @@
 # pronunciation for Chinese/Japanese/Korean, etc.
 #
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+import re
 from anki.hooks import addHook, wrap
 from ankiqt.ui import view
 from anki.utils import hexifyID
 from ankiqt import mw
-import re
 
 # Settings
 ANSWER_FIELD="Meaning"
 CARD_TEMPLATE="Recognition"
-SHOW_HINT_KEY=Qt.Key_R
-DEBUG=True
+SHOW_HINT_KEY=u"r"
 
 def newKeyPressEvent(evt):
     """Show hint when the SHOW_HINT_KEY is pressed."""
     if mw.state == "showQuestion":
         if (mw.currentCard.cardModel.name == CARD_TEMPLATE
-                and evt.key() == SHOW_HINT_KEY):
+                and unicode(evt.text()) == SHOW_HINT_KEY):
             evt.accept()
             return mw.moveToState("showHint")
     return oldEventHandler(evt)
@@ -43,7 +40,7 @@ def newRedisplay(self):
         if self.drawRule:
             self.write("<hr>")
         self.drawAnswer()
-    self.flush()
+        self.flush()
 
 def filterHint(a, currentCard):
     """If we are showing the hint, filter out the ANSWER_FIELD"""
@@ -57,9 +54,8 @@ def filterHint(a, currentCard):
     return a
 
 addHook("drawAnswer", filterHint)
-
 oldEventHandler = mw.keyPressEvent
 mw.keyPressEvent = newKeyPressEvent
 view.View.redisplay = wrap(view.View.redisplay, newRedisplay, "after")
 
-mw.registerPlugin("Hint-peeking", 4)
+mw.registerPlugin("Hint-peeking", 5)
