@@ -17,14 +17,14 @@ from anki.utils import hexifyID
 from ankiqt import mw
 
 # Settings
-ANSWER_FIELD="Meaning"
-CARD_TEMPLATE="Recognition"
 SHOW_HINT_KEY=u"r"
+ANSWER_FIELDS=["Meaning"]
+CARD_TEMPLATES=["Recognition"]
 
 def newKeyPressEvent(evt):
     """Show hint when the SHOW_HINT_KEY is pressed."""
     if mw.state == "showQuestion":
-        if (mw.currentCard.cardModel.name == CARD_TEMPLATE
+        if (mw.currentCard.cardModel.name in CARD_TEMPLATES
                 and unicode(evt.text()) == SHOW_HINT_KEY):
             evt.accept()
             return mw.moveToState("showHint")
@@ -32,7 +32,7 @@ def newKeyPressEvent(evt):
 
 def newRedisplay(self):
     """If we are showing the hint, display the answer.
-    We will filter away the ANSWER_FIELD with a hook."""
+    We will filter away the ANSWER_FIELDS with a hook."""
     if self.state == "showHint":
         self.setBackground()
         if not self.main.currentCard.cardModel.questionInAnswer:
@@ -43,11 +43,11 @@ def newRedisplay(self):
         self.flush()
 
 def filterHint(a, currentCard):
-    """If we are showing the hint, filter out the ANSWER_FIELD"""
+    """If we are showing the hint, filter out the ANSWER_FIELDS"""
     if mw.state == "showHint":
         fieldIDs = ["fm" + hexifyID(field.id)
                     for field in currentCard.fact.model.fieldModels
-                    if field.name == ANSWER_FIELD]
+                    if field.name in ANSWER_FIELDS]
         for fid in fieldIDs:
             p = re.compile('<span class="%s">.*?</span>' % fid)
             a = p.sub('<span> </span>', a, re.DOTALL)
