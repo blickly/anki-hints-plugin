@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author:  Ben Lickly <blickly at berkeley dot edu>
-#         (based on 'Two-step answer' plugin by Eric Pignet)
+#         (inspired by the 'Two-step answer' plugin by Eric Pignet)
 # License: GNU GPL, version 3 or later; http://www.gnu.org/copyleft/gpl.html
 #
 #   Hint-peeking plugin
@@ -8,18 +8,29 @@
 # This plugin allows peeking at some of the fields in a flashcard before
 # seeing the answer. This can be used to peek at example sentences,
 # pronunciation for Chinese/Japanese/Korean, etc.
-#
+
+########################### Settings #######################################
+# The following settings can be changed to suit your needs. Lines
+# starting with a pound sign (#) are comments and are ignored.
+
+# SHOW_HINT_KEY defines the key that will reveal the hint fields.
+SHOW_HINT_KEY=u"r"
+
+# ANSWER_FIELDS defines a list of fields that should _not_ be revealed
+# when the show hint key is pressed.
+ANSWER_FIELDS=["Meaning"]
+
+# CARD_TEMPLATES defines a list of card templates for which hints may
+# be used. Other templates will not show anything when the show hint key
+# is pressed.
+CARD_TEMPLATES=["Recognition"]
+######################### End of Settings ##################################
 
 import re
 from anki.hooks import addHook, wrap
 from ankiqt.ui import view
 from anki.utils import hexifyID
 from ankiqt import mw
-
-# Settings
-SHOW_HINT_KEY=u"r"
-ANSWER_FIELDS=["Meaning"]
-CARD_TEMPLATES=["Recognition"]
 
 def newKeyPressEvent(evt):
     """Show hint when the SHOW_HINT_KEY is pressed."""
@@ -58,4 +69,4 @@ oldEventHandler = mw.keyPressEvent
 mw.keyPressEvent = newKeyPressEvent
 view.View.redisplay = wrap(view.View.redisplay, newRedisplay, "after")
 
-mw.registerPlugin("Hint-peeking", 5)
+mw.registerPlugin("Hint-peeking", 6)
