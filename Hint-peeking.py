@@ -61,7 +61,7 @@ def filterHint(a, currentCard):
                     if field.name in ANSWER_FIELDS]
         for fid in fieldIDs:
             p = re.compile('<span class="%s">.*?</span>' % fid)
-            a = p.sub('<span> </span>', a, re.DOTALL)
+            a = p.sub('<span> </span>', a, re.DOTALL | re.IGNORECASE)
     return a
 
 addHook("drawAnswer", filterHint)
