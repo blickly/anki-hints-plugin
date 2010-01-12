@@ -28,18 +28,19 @@ CARD_TEMPLATES=["Recognition"]
 
 import re
 from anki.hooks import addHook, wrap
-from ankiqt.ui import view
 from anki.utils import hexifyID
+from ankiqt.ui.main import AnkiQt
+from ankiqt.ui.view import View
 from ankiqt import mw
 
-def newKeyPressEvent(evt):
+def newKeyPressEvent(self, evt, _old):
     """Show hint when the SHOW_HINT_KEY is pressed."""
-    if mw.state == "showQuestion":
-        if (mw.currentCard.cardModel.name in CARD_TEMPLATES
+    if self.state == "showQuestion":
+        if (self.currentCard.cardModel.name in CARD_TEMPLATES
                 and unicode(evt.text()) == SHOW_HINT_KEY):
             evt.accept()
-            return mw.moveToState("showHint")
-    return oldEventHandler(evt)
+            return self.moveToState("showHint")
+    return _old(self, evt)
 
 def newRedisplay(self):
     """If we are showing the hint, display the answer.
@@ -65,8 +66,7 @@ def filterHint(a, currentCard):
     return a
 
 addHook("drawAnswer", filterHint)
-oldEventHandler = mw.keyPressEvent
-mw.keyPressEvent = newKeyPressEvent
-view.View.redisplay = wrap(view.View.redisplay, newRedisplay, "after")
+AnkiQt.keyPressEvent = wrap(AnkiQt.keyPressEvent, newKeyPressEvent, "around")
+View.redisplay = wrap(View.redisplay, newRedisplay, "after")
 
-mw.registerPlugin("Hint-peeking", 6)
+mw.registerPlugin("Hint-peeking", 7)
