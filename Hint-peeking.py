@@ -57,6 +57,7 @@ def newRedisplay(self):
 def filterHint(a, currentCard):
     """If we are showing the hint, filter out the ANSWER_FIELDS"""
     if mw.state == "showHint":
+        a = alterStyleSpans(a)
         fieldIDs = ["fm" + hexifyID(field.id)
                     for field in currentCard.fact.model.fieldModels
                     if field.name in ANSWER_FIELDS]
@@ -65,8 +66,14 @@ def filterHint(a, currentCard):
             a = p.sub('<span> </span>', a, re.DOTALL | re.IGNORECASE)
     return a
 
+def alterStyleSpans(cardText):
+    spanstyle = re.compile('<span style=(.*?)</span>')
+    def alterspan(matchobj):
+        return '< span style=%s< /span>' % matchobj.group(1)
+    return spanstyle.sub(alterspan, cardText, re.DOTALL | re.IGNORECASE)
+
 addHook("drawAnswer", filterHint)
 AnkiQt.keyPressEvent = wrap(AnkiQt.keyPressEvent, newKeyPressEvent, "around")
 View.redisplay = wrap(View.redisplay, newRedisplay, "after")
 
-mw.registerPlugin("Hint-peeking", 7)
+mw.registerPlugin("Hint-peeking", 8)
