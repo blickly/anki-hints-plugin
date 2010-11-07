@@ -62,6 +62,7 @@ def newKeyPressEvent(self, evt, _old):
 def newRedisplay(self):
     """If we are showing the hint, display the answer.
     We will filter away the ANSWER_FIELDS with a hook."""
+    # This mirrors View.redisplay's "showAnswer" state.
     if self.state == "showHint":
         self.setBackground()
         if not self.main.currentCard.cardModel.questionInAnswer:
